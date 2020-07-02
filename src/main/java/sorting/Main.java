@@ -114,7 +114,7 @@ public class Main {
 
     private static <T extends Comparable<? super T>> Map<T, Integer> sortByCount(List<T> data) {
         Map<T, Integer> result = new HashMap<>();
-        data.forEach(el -> result.compute(el, (key, value) -> value == null ? 1 : value + 1));
+        data.forEach(el -> result.merge(el, 1, Integer::sum));
         return result;
     }
 }
