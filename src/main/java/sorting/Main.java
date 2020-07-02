@@ -2,21 +2,21 @@ package sorting;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
 
     private static final Scanner scanner = new Scanner(System.in);
 
+    private static String dataType = "word";
+
+    private static String sortingType = "natural";
+
     public static void main(String[] args) {
-        String dataType;
-        if (args.length >= 2 && "-dataType".equals(args[0])) {
-            dataType = args[1];
-        } else {
-            dataType = "word";
-        }
+        processArguments(args);
 
         switch (dataType) {
             case "long":
@@ -29,7 +29,34 @@ public class Main {
                 processWords();
                 break;
             default:
-                throw new IllegalArgumentException("Unsupported argument: " + dataType);
+                throw new IllegalArgumentException("Unsupported dataType value: " + dataType);
+        }
+    }
+
+    private static void processArguments(String[] args) {
+        String currentArg = null;
+        for (String arg : args) {
+            if (arg.startsWith("-")) {
+                currentArg = arg;
+            } else {
+                assignArgument(currentArg, arg);
+            }
+        }
+
+        if (!(sortingType.equals("natural") || sortingType.equals("byCount"))) {
+            throw new IllegalArgumentException("Unsupported sortingType value: " + sortingType);
+        }
+    }
+
+    private static void assignArgument(String argName, String argValue) {
+        if (argName == null) {
+            return;
+        }
+
+        if ("-dataType".equals(argName)) {
+            dataType = argValue;
+        } else if ("-sortingType".equals(argName)) {
+            sortingType = argValue;
         }
     }
 
@@ -40,14 +67,7 @@ public class Main {
         }
 
         System.out.println("Total numbers: " + numbers.size() + ".");
-
-        if (numbers.size() > 0) {
-            Collections.sort(numbers);
-            long max = numbers.get(numbers.size() - 1);
-            long occurrences = countOccurrences(numbers, max);
-            long percentage = Math.round(((double) occurrences / numbers.size()) * 100);
-            System.out.println("The greatest number: " + max + " (" + occurrences + " time(s), " + percentage + "%).");
-        }
+        processSorting(numbers, false);
     }
 
     private static void processLines() {
@@ -57,16 +77,7 @@ public class Main {
         }
 
         System.out.println("Total lines: " + lines.size() + ".");
-
-        if (lines.size() > 0) {
-            lines.sort(Comparator.comparingInt(String::length).thenComparing(String::compareTo));
-            String max = lines.get(lines.size() - 1);
-            long occurrences = countOccurrences(lines, max);
-            long percentage = Math.round(((double) occurrences / lines.size()) * 100);
-            System.out.println("The longest line:");
-            System.out.println(max);
-            System.out.println("(" + occurrences + " time(s), " + percentage + "%).");
-        }
+        processSorting(lines, true);
     }
 
     private static void processWords() {
@@ -76,23 +87,34 @@ public class Main {
         }
 
         System.out.println("Total words: " + words.size() + ".");
+        processSorting(words, false);
+    }
 
-        if (words.size() > 0) {
-            words.sort(Comparator.comparingInt(String::length).thenComparing(String::compareTo));
-            String max = words.get(words.size() - 1);
-            long occurrences = countOccurrences(words, max);
-            long percentage = Math.round(((double) occurrences / words.size()) * 100);
-            System.out.println("The longest word: " + max + " (" + occurrences + " time(s), " + percentage + "%).");
+    private static <T extends Comparable<? super T>> void processSorting(List<T> data, boolean printMultiline) {
+        if (data.size() > 0) {
+            if ("natural".equals(sortingType)) {
+                Collections.sort(data);
+                System.out.print(printMultiline ? "Sorted data: " + System.lineSeparator() : "Sorted data: ");
+                for (T elem : data) {
+                    System.out.print(printMultiline ? elem + System.lineSeparator() : elem + " ");
+                }
+            } else if ("byCount".equals(sortingType)) {
+                Map<T, Integer> sorted = sortByCount(data);
+                sorted.entrySet().stream()
+                        .sorted((first, second) -> first.getValue().equals(second.getValue())
+                                ? first.getKey().compareTo(second.getKey())
+                                : first.getValue() - second.getValue())
+                        .forEach(entry -> {
+                            long percentage = Math.round(((double) entry.getValue() / data.size()) * 100);
+                            System.out.println(entry.getKey() + ": " + entry.getValue() + " time(s), " + percentage + "%).");
+                        });
+            }
         }
     }
 
-    private static <T> long countOccurrences(List<T> elements, T value) {
-        long count = 0;
-        for (T element : elements) {
-            if (element.equals(value)) {
-                count++;
-            }
-        }
-        return count;
+    private static <T extends Comparable<? super T>> Map<T, Integer> sortByCount(List<T> data) {
+        Map<T, Integer> result = new HashMap<>();
+        data.forEach(el -> result.compute(el, (key, value) -> value == null ? 1 : value + 1));
+        return result;
     }
 }
