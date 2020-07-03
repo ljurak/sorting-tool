@@ -4,7 +4,7 @@ import java.util.Set;
 
 public class Arguments {
 
-    private final Set<String> validArgumentNames = Set.of("-dataType", "-sortingType");
+    private final Set<String> validArgumentNames = Set.of("-dataType", "-sortingType", "-inputFile", "-outputFile");
 
     private final Set<String> validDataTypes = Set.of("long", "line", "word");
 
@@ -16,12 +16,24 @@ public class Arguments {
 
     private String sortingType = "natural";
 
+    private String inputFile;
+
+    private String outputFile;
+
     public String getDataType() {
         return dataType;
     }
 
     public String getSortingType() {
         return sortingType;
+    }
+
+    public String getInputFile() {
+        return inputFile;
+    }
+
+    public String getOutputFile() {
+        return outputFile;
     }
 
     public boolean isValidArguments() {
@@ -70,7 +82,7 @@ public class Arguments {
         } else if ("-sortingType".equals(name)) {
             return validSortingTypes.contains(value);
         }
-        return false;
+        return "-inputFile".equals(name) || "-outputFile".equals(name);
     }
 
     private void setArgumentValue(String name, String value) {
@@ -79,6 +91,10 @@ public class Arguments {
                 dataType = value;
             } else if ("-sortingType".equals(name)) {
                 sortingType = value;
+            } else if ("-inputFile".equals(name)) {
+                inputFile = value;
+            } else if ("-outputFile".equals(name)) {
+                outputFile = value;
             }
         }
     }
@@ -88,6 +104,10 @@ public class Arguments {
             System.out.println("No data type defined!");
         } else if ("-sortingType".equals(argument)) {
             System.out.println("No sorting type defined!");
+        } else if ("-inputFile".equals(argument)) {
+            System.out.println("No input file defined!");
+        } else if ("-outputFile".equals(argument)) {
+            System.out.println("No output file defined!");
         }
     }
 }
